@@ -6,6 +6,7 @@ describe('Login Page - OrangeHRM Demo', () => {
     });
   
     it('should display the login page correctly', () => {
+
       // Verifikasi elemen halaman
       cy.get('input[name="username"]').should('be.visible');
       cy.get('input[name="password"]').should('be.visible');
@@ -21,12 +22,43 @@ describe('Login Page - OrangeHRM Demo', () => {
       // Verifikasi pesan error
       cy.get('.oxd-alert-content').should('be.visible').and('contain', 'Invalid credentials');
     });
-  
+
+    it('should not login with invalid user credential', () => {
+        // Masukkan kredensial username salah
+        cy.get('input[name="username"]').type('invalidUser');
+        cy.get('input[name="password"]').type('admin123');
+        cy.get('button[type="submit"]').click();
+    
+        // Verifikasi pesan error
+        cy.get('.oxd-alert-content').should('be.visible').and('contain', 'Invalid credentials');
+    });
+
+    it('should not login with invalid password credentials', () => {
+        // Masukkan kredensial password salah
+        cy.get('input[name="username"]').type('Admin');
+        cy.get('input[name="password"]').type('invalidPass');
+        cy.get('button[type="submit"]').click();
+    
+        // Verifikasi pesan error
+        cy.get('.oxd-alert-content').should('be.visible').and('contain', 'Invalid credentials');
+    });
+
     it('should login successfully with valid credentials', () => {
+      cy.intercept('GET', 'https://opensource-demo.orangehrmlive.com/web/index.php/api/v2/dashboard/employees/action-summary').as('getActionSummary');
+      cy.intercept('GET', 'https://opensource-demo.orangehrmlive.com/web/index.php/api/v2/dashboard/shortcuts').as('getShortcuts');
+
       // Masukkan kredensial benar
       cy.get('input[name="username"]').type('Admin');
       cy.get('input[name="password"]').type('admin123');
       cy.get('button[type="submit"]').click();
+
+      cy.wait('@getActionSummary').then((interception) => {
+        expect(interception.response.statusCode).to.eq(200);
+      });
+  
+      cy.wait('@getShortcuts').then((interception) => {
+        expect(interception.response.statusCode).to.eq(200);
+      });
   
       // Verifikasi navigasi ke dashboard
       cy.url().should('include', '/dashboard');
@@ -61,6 +93,5 @@ describe('Login Page - OrangeHRM Demo', () => {
         cy.get('a[href="https://twitter.com/orangehrm?lang=en"]').should('be.visible').click();
         cy.get('a[href="https://www.youtube.com/c/OrangeHRMInc"]').should('be.visible').click();
     });    
-      
-  });
+});
   
