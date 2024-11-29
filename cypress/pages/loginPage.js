@@ -1,6 +1,6 @@
 class LoginPage {
     visit() {
-        cy.visit('/auth/login');
+        cy.visit('https://opensource-demo.orangehrmlive.com/web/index.php/auth/login');
     }
 
     isUsernameVisible(){
@@ -18,6 +18,10 @@ class LoginPage {
     isDashboard(){
         cy.url().should('include', '/dashboard');
         cy.get('.oxd-topbar-header-breadcrumb').should('contain', 'Dashboard');
+    }
+
+    isLoginPage(){
+        cy.url().should('include','login');
     }
   
     enterUsername(username) {
