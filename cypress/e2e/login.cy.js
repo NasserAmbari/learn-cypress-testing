@@ -1,56 +1,53 @@
+const LoginPage = require('../pages/loginPage');
+const ForgotPasswordPage = require('../pages/forgotPasswordPage');
+
+const USERNAME = "Admin";
+const PASSWORD = "admin123";
+const INVALID_USERNAME = "invaliduUser";
+const INVALID_PASSWORD = "invalidPassword";
+
 describe('Login Page - OrangeHRM Demo', () => {
-    const baseUrl = 'https://opensource-demo.orangehrmlive.com/web/index.php/auth/login';
+    const loginPage = new LoginPage();
+    const forgotPasswordPage = new ForgotPasswordPage();
   
     beforeEach(() => {
-      cy.visit(baseUrl); // Membuka halaman login sebelum setiap test case
+      loginPage.visit();
     });
   
     it('should display the login page correctly', () => {
-
-      // Verifikasi elemen halaman
-      cy.get('input[name="username"]').should('be.visible');
-      cy.get('input[name="password"]').should('be.visible');
-      cy.get('button[type="submit"]').should('be.visible').and('contain', 'Login');
+      loginPage.isUsernameVisible();
+      loginPage.isPasswordVisible();
+      loginPage.isLoginBtnVisible();
     });
   
     it('should not login with invalid credentials', () => {
-      // Masukkan kredensial salah
-      cy.get('input[name="username"]').type('invalidUser');
-      cy.get('input[name="password"]').type('invalidPass');
-      cy.get('button[type="submit"]').click();
-  
-      // Verifikasi pesan error
-      cy.get('.oxd-alert-content').should('be.visible').and('contain', 'Invalid credentials');
+      loginPage.enterUsername(INVALID_USERNAME);
+      loginPage.enterPassword(INVALID_PASSWORD);
+      loginPage.clickLogin();
+      loginPage.getErrorMessage()
     });
 
     it('should not login with invalid user credential', () => {
-        // Masukkan kredensial username salah
-        cy.get('input[name="username"]').type('invalidUser');
-        cy.get('input[name="password"]').type('admin123');
-        cy.get('button[type="submit"]').click();
-    
-        // Verifikasi pesan error
-        cy.get('.oxd-alert-content').should('be.visible').and('contain', 'Invalid credentials');
+      loginPage.enterUsername(INVALID_USERNAME);
+      loginPage.enterPassword(PASSWORD);
+      loginPage.clickLogin();
+      loginPage.getErrorMessage()
     });
 
     it('should not login with invalid password credentials', () => {
-        // Masukkan kredensial password salah
-        cy.get('input[name="username"]').type('Admin');
-        cy.get('input[name="password"]').type('invalidPass');
-        cy.get('button[type="submit"]').click();
-    
-        // Verifikasi pesan error
-        cy.get('.oxd-alert-content').should('be.visible').and('contain', 'Invalid credentials');
+      loginPage.enterUsername(USERNAME);
+      loginPage.enterPassword(INVALID_PASSWORD);
+      loginPage.clickLogin();
+      loginPage.getErrorMessage()
     });
 
     it('should login successfully with valid credentials', () => {
       cy.intercept('GET', 'https://opensource-demo.orangehrmlive.com/web/index.php/api/v2/dashboard/employees/action-summary').as('getActionSummary');
       cy.intercept('GET', 'https://opensource-demo.orangehrmlive.com/web/index.php/api/v2/dashboard/shortcuts').as('getShortcuts');
 
-      // Masukkan kredensial benar
-      cy.get('input[name="username"]').type('Admin');
-      cy.get('input[name="password"]').type('admin123');
-      cy.get('button[type="submit"]').click();
+      loginPage.enterUsername(USERNAME);
+      loginPage.enterPassword(PASSWORD);
+      loginPage.clickLogin();
 
       cy.wait('@getActionSummary').then((interception) => {
         expect(interception.response.statusCode).to.eq(200);
@@ -59,39 +56,28 @@ describe('Login Page - OrangeHRM Demo', () => {
       cy.wait('@getShortcuts').then((interception) => {
         expect(interception.response.statusCode).to.eq(200);
       });
-  
-      // Verifikasi navigasi ke dashboard
-      cy.url().should('include', '/dashboard');
-      cy.get('.oxd-topbar-header-breadcrumb').should('contain', 'Dashboard');
+
+      loginPage.isDashboard();
     });
   
     it('should show validation errors when fields are empty', () => {
-      // Klik tombol login tanpa mengisi field
-      cy.get('button[type="submit"]').click();
-  
-      // Verifikasi pesan validasi
-      cy.get('.oxd-input-group__message')
-        .should('have.length', 2) // 2 pesan validasi (username & password)
-        .and('contain', 'Required');
+      loginPage.clickLogin();
+      loginPage.getErrorMessageRequired();
     });
 
     it('should navigate to reset password page when clicked on "Forgot your password?"', () => {
-        cy.visit('https://opensource-demo.orangehrmlive.com/web/index.php/auth/login');
+      loginPage.visit()
+      loginPage.clickForgotPass();
       
-        // Klik link "Forgot your password?"
-        cy.contains('Forgot your password?').click();
-      
-        // Verifikasi URL mengarah ke halaman reset password
-        cy.url().should('include', '/auth/requestPasswordReset');
+      forgotPasswordPage.isForgotPassword();
     });
 
     it('should display social media login buttons and they should be clickable', () => {
-        cy.visit('https://opensource-demo.orangehrmlive.com/web/index.php/auth/login');
-      
-        cy.get('a[href="https://www.linkedin.com/company/orangehrm/mycompany/"]').should('be.visible').click();
-        cy.get('a[href="https://www.facebook.com/OrangeHRM/"]').should('be.visible').click();
-        cy.get('a[href="https://twitter.com/orangehrm?lang=en"]').should('be.visible').click();
-        cy.get('a[href="https://www.youtube.com/c/OrangeHRMInc"]').should('be.visible').click();
+        loginPage.visit();
+        loginPage.clickFacebook();
+        loginPage.clickLikedin();
+        loginPage.clickLogin();
+        loginPage.clickTwitter();
     });    
 });
   
