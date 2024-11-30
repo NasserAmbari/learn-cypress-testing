@@ -65,6 +65,13 @@ class LoginPage {
     clickYoutube(){
         cy.get('a[href="https://www.youtube.com/c/OrangeHRMInc"]').should('be.visible').click();
     }
+
+    loginToDashboard(username, password){
+        this.visit();
+        this.enterUsername(username);
+        this.enterPassword(password);
+        this.clickLogin();
+    }
   }
   
   module.exports = LoginPage;
